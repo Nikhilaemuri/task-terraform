@@ -6,9 +6,9 @@ replicaCount: 1
 
 image:
   repository: 779527285137.dkr.ecr.us-east-1.amazonaws.com/terraformtask
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  tag: "latest"
 
 imagePullSecrets: []
 nameOverride: "true"
@@ -37,7 +37,7 @@ securityContext: {}
   # runAsUser: 1000
 
 service:
-  type: ClusterIP
+  type: NodePort
   port: 80
 
 ingress:
@@ -59,10 +59,10 @@ resources: {}
   # resources, such as Minikube. If you do want to specify resources, uncomment the following
   # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
   # limits:
-  #   cpu: 100m
+  #   cpu: 600m
   #   memory: 128Mi
   # requests:
-  #   cpu: 100m
+  #   cpu: 600m
   #   memory: 128Mi
 
 autoscaling:
