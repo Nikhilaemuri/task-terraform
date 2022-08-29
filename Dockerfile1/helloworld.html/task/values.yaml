@@ -37,11 +37,7 @@ securityContext: {}
   # runAsUser: 1000
 
 service:
-<<<<<<< HEAD:task/values.yaml
   type: LoadBalancer
-=======
-  type: NodePort
->>>>>>> 8c71dd8bd1b8695e1230a18b7fdad20508334aa2:Dockerfile1/docker/values.yaml
   port: 80
 
 ingress:
@@ -63,10 +59,10 @@ resources: {}
   # resources, such as Minikube. If you do want to specify resources, uncomment the following
   # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
   # limits:
-  #   cpu: 600m
+  #   cpu: 100m
   #   memory: 128Mi
   # requests:
-  #   cpu: 600m
+  #   cpu: 100m
   #   memory: 128Mi
 
 autoscaling:
