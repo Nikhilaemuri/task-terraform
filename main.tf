@@ -5,7 +5,7 @@ resource "aws_eks_cluster" "eks_cluster" {
         subnet_ids = var.subnet_ids
     }
 
-
+ 
 }
 
 
@@ -14,6 +14,10 @@ resource "aws_eks_node_group" "example" {
   node_group_name = "example"
   node_role_arn   = "arn:aws:iam::779527285137:role/AWSdevopscerttaskrole"
   subnet_ids      = var.subnet_ids
+<<<<<<< HEAD
+=======
+
+>>>>>>> 8c71dd8bd1b8695e1230a18b7fdad20508334aa2
   scaling_config {
     desired_size = 1
     max_size     = 1
