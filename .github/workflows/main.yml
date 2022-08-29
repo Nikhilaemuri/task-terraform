@@ -8,7 +8,7 @@ name: AWS WORKFLOW
 
 jobs:
   create_cluster:
-    uses: vaibhavrathod-1/Terraform/.github/workflows/manual.yml@main  
+    uses: Nikhilaemuri/task-terraform/.github/workflows/main.yml@main  
     secrets:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -27,7 +27,7 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-2
+        aws-region: us-east-1
 
     - name: Login to Amazon ECR
       id: login-ecr
@@ -43,10 +43,10 @@ jobs:
       run: |
         # Build a docker container and push it to ECR 
         echo "ECR Login"
-        aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/z2g8g3c5
-        docker build -t public.ecr.aws/z2g8g3c5/$ECR_REPOSITORY:$IMAGE_TAG .
+        aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 779527285137.dkr.ecr.us-east-1.amazonaws.com
+        docker build -t terraformtask .
         echo "Pushing image to ECR..."
-        docker push public.ecr.aws/z2g8g3c5/$ECR_REPOSITORY:$IMAGE_TAG
+        docker push 779527285137.dkr.ecr.us-east-1.amazonaws.com/terraformtask:latest
         echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
     
   Deployment_In_Dev_Environment:
@@ -69,8 +69,8 @@ jobs:
     - name: Deploy into EKS  
       id: deploy-image
       run: |
-        aws eks --region us-east-2 update-kubeconfig --name vaibhav
-        helm upgrade --recreate-pods -i octo-app octo-app
+        aws eks --region us-east-1 update-kubeconfig --name eks_tasks
+        helm upgrade --recreate-pods -i task
        
   Deployment_In_Prod_Evironment:
     name: Deployment in prod
@@ -86,19 +86,21 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}   
-        aws-region: us-east-2
+        aws-region: us-east-1
     
     - name: Deploy into EKS  
       id: deploy-image
       run: |
-        aws eks --region us-east-2 update-kubeconfig --name prod-vaibhav
-        helm upgrade --recreate-pods -i octo-app octo-app
+        aws eks --region us-east-1 update-kubeconfig --name eks_tasks
+        helm upgrade --recreate-pods -i task
        
        
         sonarqube:
         name: sonarqube
          needs: deployment
-         uses: vaibhavrathod-1/sonarqube-scan/.github/workflows/build.yml@main
+         uses: Nikhilaemuri/sonarqube/.github/workflows/build.yml@main
         secrets:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        
+
