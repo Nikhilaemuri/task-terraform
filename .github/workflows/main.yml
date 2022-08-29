@@ -1,41 +1,104 @@
-name: Manual workflow
-
 on:
-  workflow_dispatch:
-    #inputs:
-     # name:
-      # # description: 'Person to greet'
-       # default: 'World'
-        #required: false
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+name: AWS WORKFLOW
+
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
+  create_cluster:
+    uses: vaibhavrathod-1/Terraform/.github/workflows/manual.yml@main  
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    
+  Build_and_Push_Image_to_ECR:
+    name: build and push
+    needs: create_cluster
     runs-on: ubuntu-latest
-    # Steps represent a sequence of tasks that will be executed as part of the job
+
+    steps:    
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-2
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Build and push the image to Amazon ECR
+      id: build-image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: ${{ secrets.REPO_NAME }}
+        IMAGE_TAG: "latest"
+
+      run: |
+        # Build a docker container and push it to ECR 
+        echo "ECR Login"
+        aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/z2g8g3c5
+        docker build -t public.ecr.aws/z2g8g3c5/$ECR_REPOSITORY:$IMAGE_TAG .
+        echo "Pushing image to ECR..."
+        docker push public.ecr.aws/z2g8g3c5/$ECR_REPOSITORY:$IMAGE_TAG
+        echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+    
+  Deployment_In_Dev_Environment:
+    name: Deploying in Dev
+    runs-on: ubuntu-latest
+    environment: dev
+    needs: Build_and_Push_Image_to_ECR
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - name: Checkout Codebase
-        uses: actions/checkout@v2
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-# role-to-assume: arn:aws:iam::779527285137:role/AWSdevopscerttaskrole
-         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-         aws-region: us-east-1
-      - name: setup terraform
-        uses: hashicorp/setup-terraform@v1
-        with:
-          terraform_version: '1.1.2'
-      - name: terraform init
-        run: terraform init --input=false
-      #- name: terraform format
-       # run: terraform fmt -check
-      - name: terraform validate
-        run: terraform validate
-              # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
-      - name: terraform plan
-        run: terraform plan
-      - name: terraform apply
-        run: terraform apply -auto-approve
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+    
+      
+    - name: Deploy into EKS  
+      id: deploy-image
+      run: |
+        aws eks --region us-east-2 update-kubeconfig --name vaibhav
+        helm upgrade --recreate-pods -i octo-app octo-app
+       
+  Deployment_In_Prod_Evironment:
+    name: Deployment in prod
+    runs-on: ubuntu-latest
+    environment: prod
+    needs: Deployment_In_Dev_Environment
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: AWS Login For EKS
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}   
+        aws-region: us-east-2
+    
+    - name: Deploy into EKS  
+      id: deploy-image
+      run: |
+        aws eks --region us-east-2 update-kubeconfig --name prod-vaibhav
+        helm upgrade --recreate-pods -i octo-app octo-app
+       
+       
+        sonarqube:
+        name: sonarqube
+         needs: deployment
+         uses: vaibhavrathod-1/sonarqube-scan/.github/workflows/build.yml@main
+        secrets:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
