@@ -27,7 +27,11 @@ variable "vpc_id" {
 }
 
 variable "instance_types" {
+<<<<<<< HEAD
   default = ["t2.micro"]
+=======
+  default = ["t3.medium"]
+>>>>>>> f5af9b09a0bd19918e94709c5afb844fe3933481
 }
 
 
