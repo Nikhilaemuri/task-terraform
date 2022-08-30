@@ -101,7 +101,7 @@ jobs:
     - name: Deploy into EKS  
       id:  deploy-image
       run: | 
-        aws eks --region us-east-2 update-kubeconfig --name task
+        aws eks --region us-east-1 update-kubeconfig --name eks_tasks
         helm upgrade --recreate-pods -i task /Dockerfile1/helloworld.html/task/
 
     
