@@ -83,7 +83,14 @@ jobs:
         echo "Pushing image to ECR..."
         docker push 779527285137.dkr.ecr.us-east-1.amazonaws.com/terraformtask:latest
         echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-    
+  sonarqube:
+    name: sonarqube
+    needs: Deployment_In_Dev_Environment
+    uses: Nikhilaemuri/sonarqube/.github/workflows/build.yml@main
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      
   Deployment_In_Dev_Environment:
     name: Deploying in Dev
     runs-on: ubuntu-latest
@@ -128,11 +135,5 @@ jobs:
 #         aws eks --region us-east-1 update-kubeconfig --name eks_tasks
 #         helm upgrade --recreate-pods -i task 
        
-  sonarqube:
-   name: sonarqube
-   needs: Deployment_In_Dev_Environment
-   uses: Nikhilaemuri/sonarqube/.github/workflows/build.yml@main
-   secrets:
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+  
         
