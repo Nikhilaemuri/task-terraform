@@ -83,52 +83,48 @@ jobs:
         echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
     
   Deployment_In_Dev_Environment:
-     name: Deploying in Dev
-     runs-on: ubuntu-latest
-     environment: dev
-     needs: Build_and_Push_Image_to_ECR
-     steps:
-     - name: Checkout
-       uses: actions/checkout@v2
-       
-     - name: Deploy into EKS  
-       id:  deploy-image
-       run: 
-        aws eks --region us-east-2 update-kubeconfig --name task
-        helm upgrade --recreate-pods -i 
-
-     - name: Configure AWS credentials
-       uses: aws-actions/configure-aws-credentials@v1
-       with:
+    name: Deploying in Dev
+    runs-on: ubuntu-latest
+    needs: Build_and_Push_Image_to_ECR
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
-     - name: Deploy into EKS
-     
-       run: |
-          aws eks --region us-east-1 update-kubeconfig --name eks_tasks
-           helm upgrade --recreate-pods -i task
-  Deployment_In_Prod_Evironment:
-           name: Deployment in prod
-           runs-on: ubuntu-latest
-           environment: prod
-           needs: Deployment_In_Dev_Environment       
-           steps:
-           - name: Checkout
-             uses: actions/checkout@v2
+       
+    - name: Deploy into EKS  
+      id:  deploy-image
+      run: | 
+        aws eks --region us-east-2 update-kubeconfig --name task
+        helm upgrade --recreate-pods -i task /Dockerfile1/helloworld.html/task/
 
-           - name: AWS Login For EKS
-             uses: aws-actions/configure-aws-credentials@v1 
-             with:
-               aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-               aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}   
-               aws-region: us-east-1
     
-           - name: Deploy into EKS  
-             id: deploy-image
-             run: |
-               aws eks --region us-east-1 update-kubeconfig --name eks_tasks
-               helm upgrade --recreate-pods -i task
+   
+#   Deployment_In_Prod_Evironment:
+#     name: Deployment in prod
+#     runs-on: ubuntu-latest
+#     environment: prod
+#     needs: Deployment_In_Dev_Environment       
+#     steps:
+#     - name: Checkout
+#       uses: actions/checkout@v2
+
+#     - name: AWS Login For EKS
+#       uses: aws-actions/configure-aws-credentials@v1 
+#       with:
+#         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}   
+#         aws-region: us-east-1
+    
+#     - name: Deploy into EKS  
+#       id: deploy-image
+#       run: |
+#         aws eks --region us-east-1 update-kubeconfig --name eks_tasks
+#         helm upgrade --recreate-pods -i task
        
   sonarqube:
    name: sonarqube
