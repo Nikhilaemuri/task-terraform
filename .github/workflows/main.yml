@@ -11,17 +11,19 @@ jobs:
     steps: 
       - name: Checkout Codebase
         uses: actions/checkout@v2
+        
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1      
         with:
         # role-to-assume: arn:aws:iam::779527285137:role/AWSdevopscerttaskrole
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+         aws-region: us-east-1
       - name: setup terraform
         uses: hashicorp/setup-terraform@v1
         with:
           terraform_version: '1.1.2'
+          
       - name: terraform init
         run: terraform init --input=false
       #- name: terraform format
@@ -29,6 +31,7 @@ jobs:
       - name: terraform validate
         run: terraform validate
               # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
+     
       - name: terraform plan
         run: terraform plan
       - name: terraform apply
@@ -87,6 +90,12 @@ jobs:
      steps:
      - name: Checkout
        uses: actions/checkout@v2
+       
+     - name: Deploy into EKS  
+       id:  deploy-image
+       run: 
+        aws eks --region us-east-2 update-kubeconfig --name task
+        helm upgrade --recreate-pods -i 
 
      - name: Configure AWS credentials
        uses: aws-actions/configure-aws-credentials@v1
@@ -95,38 +104,37 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
      - name: Deploy into EKS
-       id: deploy-image
+     
        run: |
           aws eks --region us-east-1 update-kubeconfig --name eks_tasks
            helm upgrade --recreate-pods -i task
-           Deployment_In_Prod_Evironment:
+  Deployment_In_Prod_Evironment:
            name: Deployment in prod
            runs-on: ubuntu-latest
-             environment: prod
-              needs: Deployment_In_Dev_Environment       
-          steps:
-          - name: Checkout
-          uses: actions/checkout@v2
+           environment: prod
+           needs: Deployment_In_Dev_Environment       
+           steps:
+           - name: Checkout
+             uses: actions/checkout@v2
 
-          - name: AWS Login For EKS
-           uses: aws-actions/configure-aws-credentials@v1 
-           with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}   
-          aws-region: us-east-1
+           - name: AWS Login For EKS
+             uses: aws-actions/configure-aws-credentials@v1 
+             with:
+               aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+               aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}   
+               aws-region: us-east-1
     
            - name: Deploy into EKS  
-            id: deploy-image
-          run: |
-          aws eks --region us-east-1 update-kubeconfig --name eks_tasks
-          helm upgrade --recreate-pods -i task
-       
+             id: deploy-image
+             run: |
+               aws eks --region us-east-1 update-kubeconfig --name eks_tasks
+               helm upgrade --recreate-pods -i task
        
   sonarqube:
-    name: sonarqube
-    needs: Deployment_In_Dev_Environment
-    uses: Nikhilaemuri/sonarqube/.github/workflows/build.yml@main
-    secrets:
+   name: sonarqube
+   needs: Deployment_In_Dev_Environment
+   uses: Nikhilaemuri/sonarqube/.github/workflows/build.yml@main
+   secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         
