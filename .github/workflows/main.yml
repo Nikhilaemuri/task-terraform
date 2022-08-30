@@ -1,5 +1,6 @@
 name: Manual workflow
 on:
+  workflow_call:
   push:
     branches: [ main ]
 jobs:
