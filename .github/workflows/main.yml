@@ -40,15 +40,15 @@ jobs:
 
 
 
-  create_cluster:
-    uses: Nikhilaemuri/task-terraform/.github/workflows/main.yml@main  
-    secrets:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#   create_cluster:
+#     uses: Nikhilaemuri/task-terraform/.github/workflows/main.yml@main  
+#     secrets:
+#       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     
   Build_and_Push_Image_to_ECR:
     name: build and push
-    needs: create_cluster
+    needs: build
     runs-on: ubuntu-latest
 
     steps:    
