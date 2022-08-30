@@ -126,7 +126,7 @@ jobs:
 #       id: deploy-image
 #       run: |
 #         aws eks --region us-east-1 update-kubeconfig --name eks_tasks
-#         helm upgrade --recreate-pods -i task
+#         helm upgrade --recreate-pods -i task 
        
   sonarqube:
    name: sonarqube
